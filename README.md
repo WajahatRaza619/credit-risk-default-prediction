@@ -44,7 +44,7 @@ credit-risk-default-prediction/
 │   └── credit_risk_project.ipynb
 │
 ├── images/
-│   ├── lr_roc_curve.png
+│   ├── logistic_roc_curve.png
 │   ├── rf_roc_curve.png
 │   ├── rf_feature_importance.png
 │   ├── rf_classification_report.png
@@ -167,7 +167,7 @@ The model predicts non-defaulters very well but misses many real defaulters.
 
 ### ROC curve
 
-![Logistic Regression ROC](images/lr_roc_curve.png)
+![Logistic Regression ROC](images/logistic_roc_curve.png)
 
 ---
 
