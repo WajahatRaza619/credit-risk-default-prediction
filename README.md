@@ -1,166 +1,303 @@
-# Credit Risk – Default Prediction
+# 📊 Credit Risk – Default Prediction
 
-This project builds a machine learning model to predict whether a credit card customer will default next month using behavioural and financial features.  
-The objective is to follow a real-world credit risk modelling workflow used in banks and financial institutions.
+This project builds a complete **end-to-end credit default prediction pipeline** using behavioural and financial features.  
+The objective is to predict whether a customer will default on the next month’s credit card payment.
 
---------------------------------------------------
+The work covers the full journey:
+- Excel based business exploration
+- Feature engineering in Python
+- SQL style analysis inside Python
+- Multiple machine-learning models
+- Model comparison and business interpretation
 
-Problem Statement
+---
 
-Given historical customer credit and payment behaviour, predict:
+## 📌 Problem Statement
 
-Will the customer default next month? (Yes / No)
+Predict whether a customer will default on the next month’s payment using customer profile and behavioural data.
 
-This is a binary classification problem.
+This type of model is commonly used by banks and financial institutions for:
+- early risk identification
+- portfolio monitoring
+- decision support for credit strategies
 
---------------------------------------------------
+---
 
-Dataset
+## 📁 Dataset
 
-Source: UCI Credit Card Default Dataset
+**Source** – UCI Credit Card Default Dataset  
+**Rows** – 30,000 customers  
+**Target variable** – `default.payment.next.month`  
+Renamed in the project as:
 
-The dataset contains customer level information such as:
-- credit limit
-- age
-- payment behaviour
-- bill amounts
-- payment amounts
+
+---
+
+## 🗂 Repository Structure
+
+
+---
+
+# 🧠 Project Workflow
+
+---
+
+## 1. Excel based business exploration
+
+Initial analysis was done in Excel using pivot tables.
+
+We analysed:
+- Late payment vs default
+- Payment behaviour buckets (Low / Medium / High)
+- Overall default distribution
+
+Main business findings:
+
+- Customers with **low payment behaviour** show a much higher default rate
+- Customers with **late payments** are more likely to default
+- The dataset is **imbalanced** (non-defaulters are the majority)
+
+These observations guided feature creation.
+
+---
+
+## 2. Feature engineering
+
+We created behavioural features:
+
+| Feature | Description |
+|------|-----------|
+| avg_bill_amt | average of monthly bill amounts |
+| avg_pay_amt | average of monthly payments |
+| pay_to_bill_ratio | avg_pay_amt / avg_bill_amt |
+| Late_Payment | whether the customer had recent late payments |
 
 Target variable:
-default.payment.next.month
 
---------------------------------------------------
 
-Project Structure
+---
 
-credit-risk-default-prediction/
-|
-|-- data/
-|   |-- raw dataset (not uploaded to GitHub)
-|
-|-- notebooks/
-|   |-- complete analysis and modelling notebook
-|
-|-- README.md
+## 3. SQL analysis inside Python
 
---------------------------------------------------
+We created an in-memory SQL table and executed analytical queries such as:
 
-Feature Engineering
+```sql
+SELECT
+    Late_Payment,
+    AVG(is_default) AS default_rate,
+    COUNT(*) AS customers
+FROM credit_card_customers
+GROUP BY Late_Payment;
 
-The following features were created and used:
+4. Final modelling dataset
 
-- LIMIT_BAL : credit limit
-- AGE
-- Late_Payment : derived payment behaviour feature
-- avg_bill_amt : average bill amount
-- avg_pay_amt : average payment amount
-- pay_to_bill_ratio : payment to bill ratio
+Features used for modelling:
 
-Target used for modelling:
+LIMIT_BAL
 
-is_default  
-(1 = default, 0 = non-default)
+AGE
 
---------------------------------------------------
+Late_Payment
 
-Models Implemented
+avg_bill_amt
 
-The following models were trained and compared:
+avg_pay_amt
 
-- Logistic Regression
-- Logistic Regression with class_weight = balanced
-- Random Forest Classifier
-- Gradient Boosting Classifier
+pay_to_bill_ratio
 
---------------------------------------------------
+Target:
 
-Evaluation Metrics
+is_default
 
-Models were evaluated using:
+5. Train–test split
+70% training data
+30% test data
 
-- Accuracy
-- Precision
-- Recall
-- F1-score
-- Confusion matrix
-- ROC curve
-- ROC-AUC score
+🤖 Models Implemented
 
-Special focus was given to recall for defaulters because missing a risky customer is costly in real business scenarios.
+We implemented and compared multiple models.
 
---------------------------------------------------
+Model 1 – Logistic Regression (baseline)
 
-Key Results (Test set - approximate)
+Why we used it:
 
-Model                         Accuracy   Default Recall   ROC-AUC
-Logistic Regression           ~0.79       ~0.36            ~0.72
-Balanced Logistic Regression  ~0.78       ~0.52            ~0.73
-Random Forest                 ~0.76       ~0.58            ~0.76
-Gradient Boosting             ~0.81       ~0.41            ~0.76
+standard baseline in credit risk
 
---------------------------------------------------
+interpretable
 
-Important Observations
+fast and stable
 
-- Late payment behaviour is the strongest predictor of default.
-- Tree-based models capture non-linear relationships better than linear models.
-- Class imbalance significantly affects default prediction.
-- Using class weighting improves recall for defaulters.
-- Changing the probability threshold improves the trade-off between false alarms and missed defaulters.
+gives coefficients
 
---------------------------------------------------
+Results:
 
-Feature Importance (Random Forest)
+Accuracy ≈ 0.79
 
-The most important features were:
+AUC ≈ 0.725
 
-- Late_Payment
-- avg_pay_amt
-- pay_to_bill_ratio
-- LIMIT_BAL
+Main issue:
 
---------------------------------------------------
+The model performs well for non-defaulters but misses many actual defaulters.
 
-Business Interpretation
+ROC – Logistic Regression
 
-This model can be used to:
+Model 2 – Logistic Regression with threshold tuning
 
-- flag high-risk customers
-- support credit limit review decisions
-- help risk teams in proactive customer intervention
-- improve overall portfolio risk monitoring
+Instead of using the default 0.50 cutoff, we tested:
 
---------------------------------------------------
+threshold = 0.30
 
-Tools and Libraries
 
-- Python
-- Pandas
-- NumPy
-- Scikit-learn
-- Matplotlib
+Why we did this:
 
---------------------------------------------------
+In credit risk, catching defaulters is more important than overall accuracy.
 
-How to Run
+Effect:
 
-1. Clone the repository
-2. Open the notebook inside the notebooks folder
-3. Run the notebook from top to bottom
+Recall for defaulters increased
 
---------------------------------------------------
+Precision decreased
 
-Future Improvements
+More risky customers are captured
 
-- Hyperparameter tuning
-- Cross-validation
-- SHAP based explainability
-- Cost-sensitive threshold optimisation
-- Model deployment as an API
+This shows how business objectives can change the model decision rule.
 
---------------------------------------------------
+Model 3 – Logistic Regression with class weighting
 
-Author
+We trained Logistic Regression with:
 
-Wajahat Raza Khan
-Aspiring Data / Business Analyst with strong interest in credit risk and financial modelling.
+class_weight="balanced"
+
+
+Why:
+
+The dataset is imbalanced and the model was biased towards non-defaulters.
+
+Result:
+
+Better recall for defaulters
+
+Slight drop in overall accuracy
+
+More suitable for risk-focused use cases
+
+Model 4 – Random Forest
+
+Why we used Random Forest:
+
+handles non-linear relationships
+
+captures feature interactions automatically
+
+strong real-world performance for tabular data
+
+Results:
+
+Accuracy ≈ 0.76
+
+AUC ≈ 0.757
+
+Recall for defaulters improved compared to baseline logistic regression
+
+Random Forest ROC
+
+Random Forest – Feature Importance
+
+Key drivers identified:
+
+Late_Payment
+
+avg_pay_amt
+
+pay_to_bill_ratio
+
+LIMIT_BAL
+
+This matches business expectations.
+
+Random Forest – Classification Report
+
+Model 5 – Gradient Boosting
+
+Why we used Gradient Boosting:
+
+strong tree-based ensemble
+
+focuses on correcting previous errors
+
+often performs better than single tree models
+
+Results:
+
+Accuracy ≈ 0.81
+
+AUC ≈ 0.757
+
+Higher precision for defaulters
+
+Lower recall compared to Random Forest
+
+This model is more conservative in predicting defaults.
+
+📊 Model Comparison Summary
+Model	Accuracy	AUC	Default Recall (Class 1)	Strength
+Logistic Regression	~0.79	~0.725	low	simple and interpretable
+Logistic + threshold	~0.78	~0.725	higher	better for risk capture
+Logistic + class weight	~0.78	~0.733	higher	handles imbalance
+Random Forest	~0.76	~0.757	higher	captures non-linear patterns
+Gradient Boosting	~0.81	~0.757	moderate	strongest overall accuracy
+📌 Key Business Observations
+
+Late payment behaviour is the strongest risk driver
+
+Payment behaviour ratios provide significant predictive power
+
+Traditional logistic models are useful for explanation but struggle with minority class detection
+
+Tree-based models better capture behavioural complexity
+
+Threshold selection plays a major role in business outcomes
+
+📌 Final Conclusion
+
+This project demonstrates how a credit risk model can be built step-by-step:
+
+from business exploration
+
+to feature engineering
+
+to SQL validation
+
+to multiple machine-learning models
+
+and finally business-oriented evaluation
+
+Random Forest and Gradient Boosting showed the best overall performance, while logistic regression remained useful for interpretability and baseline benchmarking.
+
+🛠 Tools Used
+
+Python (Pandas, NumPy)
+
+SQL (via pandas + sqlite)
+
+Scikit-learn
+
+Matplotlib
+
+Excel (pivot tables)
+
+Google Colab
+
+GitHub
+
+🚀 Future Improvements
+
+hyperparameter tuning
+
+cross-validation
+
+SHAP based explainability
+
+cost-sensitive optimisation
+
+deployment as a scoring API
